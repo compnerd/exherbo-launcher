@@ -9,9 +9,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
-# NOTE(compnerd) MC is currently unavailable as a default rule
-set(CMAKE_MC_COMPILE_OBJECT "mc -r <CMAKE_CURRENT_BINARY_DIR> <SOURCE>")
-
 add_executable(exherbo
   Source/console.cc
   Source/distribution.cc
@@ -20,9 +17,7 @@ add_executable(exherbo
 target_sources(exherbo PRIVATE
   messages.h
   messages.rc)
-set_source_files_properties(messages.rc PROPERTIES
-  GENERATED TRUE)
-set_source_files_properties(messages.h PROPERTIES
+set_source_files_properties(messages.h messages.rc PROPERTIES
   GENERATED TRUE)
 add_custom_command(OUTPUT messages.rc messages.h
   COMMAND mc -r ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/Source/messages.mc)
