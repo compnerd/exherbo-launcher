@@ -1,7 +1,7 @@
 // Copyright 2019 Saleem Abdulrasool <compnerd@compnerd.org>
 
-#ifndef console_hh
-#define console_hh
+#ifndef message_hh
+#define message_hh
 
 #include <string>
 

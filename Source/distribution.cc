@@ -1,7 +1,7 @@
 // Copyright 2019 Saleem Abdulrasool <compnerd@compnerd.org>
 
-#include "console.hh"
 #include "distribution.hh"
+#include "message.hh"
 #include "messages.h"
 #include "utility.hh"
 #include "wslapi.hh"

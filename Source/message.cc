@@ -1,6 +1,6 @@
 // Copyright 2019 Saleem Abdulrasool <compnerd@compnerd.org>
 
-#include "console.hh"
+#include "message.hh"
 
 #include <string>
 

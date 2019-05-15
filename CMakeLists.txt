@@ -10,9 +10,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
 add_executable(exherbo
-  Source/console.cc
   Source/distribution.cc
   Source/main.cc
+  Source/message.cc
   Source/wslapi.cc)
 target_sources(exherbo PRIVATE
   messages.h

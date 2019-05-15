@@ -11,8 +11,8 @@
 #include <string>
 #include <vector>
 
-#include "console.hh"
 #include "distribution.hh"
+#include "message.hh"
 #include "messages.h"
 #include "wslapi.hh"
 
