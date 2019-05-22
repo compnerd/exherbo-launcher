@@ -18,6 +18,11 @@ class api {
   HRESULT (*pfnWslLaunch_)(PCWSTR, PCWSTR, BOOL, HANDLE, HANDLE, HANDLE, HANDLE *);
   HRESULT (*pfnWslConfigureDistribution_)(PCWSTR, ULONG, WSL_DISTRIBUTION_FLAGS);
 
+  template <typename ResultType_, typename ...Arguments_>
+  void bind(const char *name, ResultType_ (**pfn)(Arguments_...)) {
+    *pfn = reinterpret_cast<decltype(*pfn)>(::GetProcAddress(hModule_, name));
+  }
+
 public:
   api();
   ~api();
