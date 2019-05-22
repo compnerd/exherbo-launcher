@@ -42,16 +42,16 @@ namespace wsl {
 class api : public singleton<wsl::api> {
   friend class singleton<wsl::api>;
 
-  HMODULE hModule_;
-  BOOL (*pfnWslIsDistributionRegistered_)(PCWSTR);
-  HRESULT (*pfnWslRegisterDistribution_)(PCWSTR, PCWSTR);
-  HRESULT (*pfnWslLaunchInteractive_)(PCWSTR, PCWSTR, BOOL, DWORD *);
-  HRESULT (*pfnWslLaunch_)(PCWSTR, PCWSTR, BOOL, HANDLE, HANDLE, HANDLE, HANDLE *);
-  HRESULT (*pfnWslConfigureDistribution_)(PCWSTR, ULONG, WSL_DISTRIBUTION_FLAGS);
+  HMODULE hModule_= nullptr;
+  BOOL (*pfnWslIsDistributionRegistered_)(PCWSTR) = nullptr;
+  HRESULT (*pfnWslRegisterDistribution_)(PCWSTR, PCWSTR) = nullptr;
+  HRESULT (*pfnWslLaunchInteractive_)(PCWSTR, PCWSTR, BOOL, DWORD *) = nullptr;
+  HRESULT (*pfnWslLaunch_)(PCWSTR, PCWSTR, BOOL, HANDLE, HANDLE, HANDLE, HANDLE *) = nullptr;
+  HRESULT (*pfnWslConfigureDistribution_)(PCWSTR, ULONG, WSL_DISTRIBUTION_FLAGS) = nullptr;
 
   template <typename ResultType_, typename ...Arguments_>
   void bind(const char *name, ResultType_ (**pfn)(Arguments_...)) {
-    *pfn = reinterpret_cast<decltype(*pfn)>(::GetProcAddress(hModule_, name));
+    *pfn = reinterpret_cast<ResultType_(*)(Arguments_...)>(::GetProcAddress(hModule_, name));
   }
 
   api();

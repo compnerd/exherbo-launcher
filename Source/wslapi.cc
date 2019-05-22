@@ -30,7 +30,7 @@
 #include "wslapi.hh"
 
 namespace wsl {
-api::api() : hModule_(nullptr) {
+api::api() {
   // NOTE(compnerd) use LOAD_LIBRARY_SEARCH_SYSTEM32 to avoid the normal search,
   // this is a system library.
   hModule_ =
