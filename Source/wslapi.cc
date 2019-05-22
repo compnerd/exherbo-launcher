@@ -4,6 +4,8 @@
 
 namespace wsl {
 api::api() : hModule_(nullptr) {
+  // NOTE(compnerd) use LOAD_LIBRARY_SEARCH_SYSTEM32 to avoid the normal search,
+  // this is a system library.
   hModule_ =
       ::LoadLibraryExW(L"wslapi.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
   if (!hModule_)
