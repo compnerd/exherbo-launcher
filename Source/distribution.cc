@@ -8,11 +8,36 @@
 
 #include <iostream>
 
-namespace distribution {
+namespace lxss {
 using uid_t = ULONG;
 
-std::error_code wsl_getuidbynamew(const wsl::api &api,
-                                  const std::wstring &username, uid_t *uid) {
+std::error_code useraddw(const std::wstring &username) {
+  wsl::api &wsl = wsl::api::instance();
+
+  HRESULT hr;
+  DWORD dwExitCode;
+
+  std::wstring command =
+      L"/usr/bin/useradd -m -G adm,disk,wheel,cdrom,audio,video,usb,users " +
+      username;
+
+  hr = wsl.WslLaunchInteractive(distribution::name, command.c_str(), true,
+                                &dwExitCode);
+  if (FAILED(hr)) {
+    DWORD dwErrorCode;
+    if (!WIN32_FROM_HRESULT(hr, &dwErrorCode))
+      return std::error_code(-1, std::generic_category());
+    return std::error_code(dwErrorCode, std::system_category());
+  }
+  if (dwExitCode)
+    return std::error_code(dwExitCode, std::generic_category());
+
+  return std::error_code();
+}
+
+std::error_code getuidbynamew(const std::wstring &username, uid_t *uid) {
+  wsl::api &wsl = wsl::api::instance();
+
   char buffer[64];
   scoped_handle hRead;
   scoped_handle hWrite;
@@ -26,7 +51,7 @@ std::error_code wsl_getuidbynamew(const wsl::api &api,
   if (!CreatePipe(&hRead, &hWrite, &sa, 0))
     return std::error_code(GetLastError(), std::system_category());
 
-  hr = api.WslLaunch(distribution::name, command.c_str(), true,
+  hr = wsl.WslLaunch(distribution::name, command.c_str(), true,
                      GetStdHandle(STD_INPUT_HANDLE), hWrite,
                      GetStdHandle(STD_ERROR_HANDLE), &hChild);
   if (FAILED(hr)) {
@@ -53,41 +78,22 @@ std::error_code wsl_getuidbynamew(const wsl::api &api,
   }
   return std::error_code();
 }
-
-std::error_code wsl_useraddw(const wsl::api &api,
-                             const std::wstring &username) {
-  HRESULT hr;
-  DWORD dwExitCode;
-  std::wstring command =
-      L"/usr/bin/useradd -m -G adm,disk,wheel,cdrom,audio,video,usb,users " +
-      username;
-
-  hr = api.WslLaunchInteractive(distribution::name, command.c_str(), true,
-                                &dwExitCode);
-  if (FAILED(hr)) {
-    DWORD dwErrorCode;
-    if (!WIN32_FROM_HRESULT(hr, &dwErrorCode))
-      return std::error_code(-1, std::generic_category());
-    return std::error_code(dwErrorCode, std::system_category());
-  }
-  if (dwExitCode)
-    return std::error_code(dwExitCode, std::generic_category());
-
-  return std::error_code();
 }
 
-std::error_code wsl_set_default_user(const wsl::api &api,
-                                     const std::wstring &username) {
+namespace distribution {
+std::error_code set_default_user(const std::wstring &username) {
+  wsl::api &wsl = wsl::api::instance();
+
   HRESULT hr;
-  uid_t uid;
+  lxss::uid_t uid;
 
   // Query the UID of the given user name and configure the distribution to use
   // this UID as the default.
 
-  if (auto error = wsl_getuidbynamew(api, username, &uid))
+  if (auto error = lxss::getuidbynamew(username, &uid))
     return error;
 
-  hr = api.WslConfigureDistribution(distribution::name, uid,
+  hr = wsl.WslConfigureDistribution(distribution::name, uid,
                                     WSL_DISTRIBUTION_FLAGS_DEFAULT);
   if (FAILED(hr)) {
     DWORD dwErrorCode;
@@ -99,19 +105,21 @@ std::error_code wsl_set_default_user(const wsl::api &api,
   return std::error_code();
 }
 
-HRESULT install(const wsl::api &api, const wchar_t *image, bool create_user) {
+HRESULT install(const wchar_t *image, bool create_user) {
+  wsl::api &wsl = wsl::api::instance();
+
   HRESULT hr;
   DWORD dwExitCode;
   std::wstring username;
 
   std::wcout << message::format(message::id(MSG_STATUS_INSTALLING));
-  hr = api.WslRegisterDistribution(distribution::name, image);
+  hr = wsl.WslRegisterDistribution(distribution::name, image);
   if (FAILED(hr))
     return hr;
 
   // Delete /etc/resolv.conf to permit WSL to generate a version based upon
   // Windows networking information.
-  hr = api.WslLaunchInteractive(distribution::name, L"/bin/rm /etc/resolv.conf",
+  hr = wsl.WslLaunchInteractive(distribution::name, L"/bin/rm /etc/resolv.conf",
                                 TRUE, &dwExitCode);
   if (FAILED(hr))
     return hr;
@@ -123,10 +131,10 @@ HRESULT install(const wsl::api &api, const wchar_t *image, bool create_user) {
   do {
     std::wcout << message::format(message::id(MSG_ENTER_USERNAME));
     std::wcin >> username;
-  } while (distribution::wsl_useraddw(api, username));
+  } while (lxss::useraddw(username));
 
   // Set the new user as the default user
-  if (wsl_set_default_user(api, username))
+  if (set_default_user(username))
     return E_FAIL;
 
   return hr;

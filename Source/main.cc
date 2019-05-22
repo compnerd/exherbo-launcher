@@ -27,14 +27,15 @@ static const wchar_t *kShortRun = L"-c";
 } // namespace
 
 int wmain(int argc, wchar_t *argv[]) {
+  wsl::api &wsl = wsl::api::instance();
+
   std::vector<std::wstring_view> arguments{&argv[1], &argv[argc]};
-  wsl::api wslapi;
   HRESULT hr;
 
   SetConsoleTitleW(distribution::name);
 
   // Ensure that WSL is available and new enough
-  if (!wslapi.installed()) {
+  if (!wsl.installed()) {
     std::wcout << message::format(message::id(MSG_MISSING_OPTIONAL_COMPONENT));
     if (arguments.empty()) {
       std::wcout << message::format(message::id(MSG_PRESS_A_KEY));
@@ -42,7 +43,7 @@ int wmain(int argc, wchar_t *argv[]) {
     }
     return EXIT_FAILURE;
   }
-  if (!wslapi.supports_required_interfaces()) {
+  if (!wsl.supports_required_interfaces()) {
     std::wcout << message::format(message::id(MSG_OPTIONAL_COMPONENT_TOO_OLD));
     if (arguments.empty()) {
       std::wcout << message::format(message::id(MSG_PRESS_A_KEY));
@@ -53,10 +54,10 @@ int wmain(int argc, wchar_t *argv[]) {
 
   // Handle `--install`
   bool bInstall = (arguments.size() > 0) && arguments[0] == kInstall;
-  if (!wslapi.WslIsDistributionRegistered(distribution::name)) {
+  if (!wsl.WslIsDistributionRegistered(distribution::name)) {
     // If `--root` is specified, do not create a user
     bool bRoot = bInstall && (arguments.size() > 1) && arguments[1] == kRoot;
-    HRESULT hr = distribution::install(wslapi, L"image.tar.gz", !bRoot);
+    HRESULT hr = distribution::install(L"image.tar.gz", !bRoot);
     if (FAILED(hr)) {
       std::wcout << message::format(hr);
       return hr;
@@ -68,8 +69,7 @@ int wmain(int argc, wchar_t *argv[]) {
 
   if (arguments.empty()) {
     DWORD dwExitCode;
-    hr = wslapi.WslLaunchInteractive(distribution::name, L"", false,
-                                     &dwExitCode);
+    hr = wsl.WslLaunchInteractive(distribution::name, L"", false, &dwExitCode);
     if (FAILED(hr)) {
       std::wcout << hr;
       return hr;
@@ -84,8 +84,8 @@ int wmain(int argc, wchar_t *argv[]) {
     std::copy(std::begin(arguments), std::end(arguments),
               std::ostream_iterator<std::wstring_view, wchar_t>(woss, L" "));
     std::wstring command = woss.str();
-    hr = wslapi.WslLaunchInteractive(distribution::name, command.c_str(), true,
-                                     &dwExitCode);
+    hr = wsl.WslLaunchInteractive(distribution::name, command.c_str(), true,
+                                  &dwExitCode);
     if (FAILED(hr)) {
       std::wcout << hr;
       return hr;
@@ -98,8 +98,7 @@ int wmain(int argc, wchar_t *argv[]) {
     hr = E_INVALIDARG;
     if (arguments.size() == 3) {
       if (arguments[1] == kDefaultUser) {
-        if (distribution::wsl_set_default_user(wslapi,
-                                               std::wstring(arguments[2])))
+        if (distribution::set_default_user(std::wstring(arguments[2])))
           return EXIT_FAILURE;
         return EXIT_SUCCESS;
       }

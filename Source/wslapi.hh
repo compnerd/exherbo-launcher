@@ -9,8 +9,12 @@
 
 #include <cassert>
 
+#include "singleton.hh"
+
 namespace wsl {
-class api {
+class api : public singleton<wsl::api> {
+  friend class singleton<wsl::api>;
+
   HMODULE hModule_;
   BOOL (*pfnWslIsDistributionRegistered_)(PCWSTR);
   HRESULT (*pfnWslRegisterDistribution_)(PCWSTR, PCWSTR);
@@ -23,10 +27,10 @@ class api {
     *pfn = reinterpret_cast<decltype(*pfn)>(::GetProcAddress(hModule_, name));
   }
 
-public:
   api();
   ~api();
 
+public:
   bool installed() const { return hModule_; }
   bool supports_required_interfaces() const;
 

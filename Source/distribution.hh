@@ -15,9 +15,10 @@ class api;
 
 namespace distribution {
 static const constexpr wchar_t *name = L"exherbo";
-HRESULT install(const wsl::api &wslapi, const wchar_t *image, bool create_user);
-std::error_code wsl_set_default_user(const wsl::api &wslapi,
-                                     const std::wstring &username);
+
+HRESULT install(const wchar_t *image, bool create_user);
+
+std::error_code set_default_user(const std::wstring &username);
 } // namespace distribution
 
 #endif
