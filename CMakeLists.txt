@@ -28,25 +28,24 @@ target_link_libraries(exherbo PRIVATE
   onecore)
 
 # image.tar.xz downoad and conversion to image.tar.xz
-if(EXISTS ${CMAKE_BINARY_DIR}/image.tar.gz)
-  message(STATUS "${CMAKE_BINARY_DIR}/image.tar.gz exists; not downloading")
-else()
-  if(EXISTS ${CMAKE_BINARY_DIR}/image.tar.xz)
-    message(STATUS "${CMAKE_BINARY_DIR}/image.tar.xz exists; not downloading")
-  else()
-    file(DOWNLOAD https://dev.exherbo.org/stages/exherbo-x86_64-pc-linux-gnu-current.tar.xz
-      ${CMAKE_BINARY_DIR}/image.tar.xz
-      SHOW_PROGRESS)
-  endif()
-
-  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/image.tar.gz
-    COMMAND xz -d ${CMAKE_BINARY_DIR}/image.tar.xz
-    COMMAND gzip ${CMAKE_BINARY_DIR}/image.tar
-    DEPENDS ${CMAKE_BINARY_DIR}/image.tar.xz
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+include(FetchContent)
+FetchContent_Declare(stage
+  URL https://dev.exherbo.org/stages/exherbo-x86_64-pc-linux-gnu-current.tar.xz
+  DOWNLOAD_DIR ${CMAKE_BINARY_DIR}
+  DOWNLOAD_NAME image.tar.xz
+  DOWNLOAD_NO_EXTRACT TRUE)
+FetchContent_GetProperties(stage)
+if(NOT stage_POPULATED)
+  FetchContent_Populate(stage)
 endif()
 
-add_custom_target(image ALL DEPENDS ${CMAKE_BINARY_DIR}/image.tar.gz)
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/image.tar.gz
+  COMMAND xz -d ${CMAKE_BINARY_DIR}/image.tar.xz
+  COMMAND gzip ${CMAKE_BINARY_DIR}/image.tar
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
+add_custom_target(image ALL
+  DEPENDS ${CMAKE_BINARY_DIR}/image.tar.gz)
 
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/exherbo_TemporaryKey.pfx)
   # https://docs.microsoft.com/en-us/windows/desktop/appxpkg/how-to-create-a-package-signing-certificate
